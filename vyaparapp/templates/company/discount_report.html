@@ -160,7 +160,7 @@
                     
                     </div>
                     <div class="modal-body">
-                      <form method="post" action="{% url 'send_sales_report_via_mail' %}"    id="email" enctype="multipart/form-data">
+                      <form method="post" action="{% url 'send_discount_report_via_mail' %}"    id="email" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="form-group" hidden>
                             <label>From DATE</label>
@@ -240,7 +240,7 @@
                 <div class="card p-0 m-0 bg-light" style="min-height: 60vh;width: 96%;" id="d2">
                     <div class="row m-2 p-2 pt-3">
                         <div class="col-sm-12 col-lg-3">
-                            <p class="tb fw-bolder pt-2" style="color: #0080ff;">Discount REPORT</p>
+                            <p class="tb fw-bolder pt-2" style="color: #0080ff;">Discount Report</p>
                             <div class="pt-2">
                                 <div class="position-relative">
                                     <div class="position-absolute" style="margin-top:0.4rem;margin-left: 0.5rem;">
@@ -309,11 +309,11 @@
                             {% for c in credit %}
                             <tr>
                                 
-                                <td>{{c.salesinvoice.date|date:'Y-m-d'}}</td>
+                                <td class="text-center">{{c.salesinvoice.date|date:'Y-m-d'}}</td>
                                
-                                <td>{{c.salesinvoice.party_name}}</td>
-                                <td>{{c.discount}}</td>
-                                <td>00.00</td>
+                                <td class="text-center">{{c.salesinvoice.party_name}}</td>
+                                <td class="text-center">{{c.discount}}</td>
+                                <td class="text-center">00.00</td>
                                 
                                 
                                 
@@ -321,11 +321,11 @@
                             {% for c in creditt %}
                             <tr>
                                 
-                                <td>{{c.purchasebill.billdate|date:'Y-m-d'}}</td>
+                                <td class="text-center">{{c.purchasebill.billdate|date:'Y-m-d'}}</td>
                                
-                                <td>{{c.purchasebill.party.party_name}}</td>
-                                <td>00.00</td>
-                                <td>{{c.discount}}</td>
+                                <td class="text-center">{{c.purchasebill.party.party_name}}</td>
+                                <td class="text-center">00.00</td>
+                                <td class="text-center">{{c.discount}}</td>
                                 
                                 
                                 
@@ -336,6 +336,14 @@
                     </table>
 
 
+                </div>
+                
+                    <div class="col">
+                        <p style="margin-left: 800px;">Total Sales Discount: <span id="totalSalesDiscount">0.00</span></p>
+                    </div>
+                    <div class="col">
+                        <p style="margin-left: 800px;">Total Purchase Discount: <span id="totalPurchaseDiscount">0.00</span></p>
+                    </div>
                 </div>
                 
             </div>
@@ -360,6 +368,21 @@
     {% endfor %}
    </script>
 <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Calculate total sales discount
+        var totalSalesDiscount = 0;
+        document.querySelectorAll("tbody tr td:nth-child(3)").forEach(function(td) {
+            totalSalesDiscount += parseFloat(td.textContent);
+        });
+        document.getElementById("totalSalesDiscount").textContent = totalSalesDiscount.toFixed(2);
+
+        // Calculate total purchase discount
+        var totalPurchaseDiscount = 0;
+        document.querySelectorAll("tbody tr td:nth-child(4)").forEach(function(td) {
+            totalPurchaseDiscount += parseFloat(td.textContent);
+        });
+        document.getElementById("totalPurchaseDiscount").textContent = totalPurchaseDiscount.toFixed(2);
+    });
     $(document).ready(function () {
         $('.apply-filter').on('click', function () {
             const $table = $('#myTable');
@@ -459,7 +482,7 @@ jQuery(document).ready(function ($) {
    
     $(document).on('click', '.btn_print', function (event) {
     $('#myTable').removeClass('table-hover');
-    var printContents = $("#content").clone(); // Clone the content-div to avoid modifying the original content
+    var printContents = $("#content-div").clone(); // Clone the content-div to avoid modifying the original content
     printContents.find('.hideon-print').remove(); // Remove columns by class name
 
     var $printerDiv = $('<div class="printContainer" id=printContainer></div>');
@@ -549,10 +572,10 @@ $('#in2').on('change', function () {
 
 function exportAsExcel() {
     $('in1').prop
-    const table = document.getElementById('myTable1'); // Replace 'myTable' with your table's ID
+    const table = document.getElementById('myTable'); // Replace 'myTable' with your table's ID
     const wb = XLSX.utils.table_to_book(table);
 
-    XLSX.writeFile(wb, 'salesreport.xlsx');
+    XLSX.writeFile(wb, 'discount_report.xlsx');
     location.reload();
 }
 </script>
@@ -573,12 +596,12 @@ function exportAsExcel() {
     
 
     // Use the correct selector to get the element by ID
-    var element = document.getElementById('content1') 
+    var element = document.getElementById('content-div') 
 
             var opt =
             {
                 margin: 0.5,
-                filename: 'Sales report' + '.pdf',
+                filename: 'Discount report' + '.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 4 },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait', }

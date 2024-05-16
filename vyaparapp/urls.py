@@ -557,6 +557,7 @@ urlpatterns = [
 
 
     path('discount_report',views.discount_report,name='discount_report'),
+    path('send_discount_report_via_mail',views.send_discount_report_via_mail,name='send_discount_report_via_mail'),
     
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
     

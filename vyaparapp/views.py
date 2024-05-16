@@ -17059,3 +17059,178 @@ def discount_report(request):
   credit=SalesInvoiceItem.objects.filter(company=staff.company)
   creditt = PurchaseBillItem.objects.filter(company=staff.company)
   return render(request,'company/discount_report.html',{'staff':staff,'company':company,'credit':credit,'creditt':creditt})
+
+ 
+
+def send_discount_report_via_mail(request):
+  if request.method == 'POST':
+    from_date_str=request.POST['fdate']
+    To_date_str=request.POST['tdate']
+    search=request.POST['search']
+    filters_by=request.POST['filter']
+    emails_string = request.POST['email']
+    emails= [email.strip() for email in emails_string.split(',')]
+    mess=request.POST['message']
+
+    #filter using date-------------------
+    if from_date_str and To_date_str:
+      id=request.session.get('staff_id')
+      staff=staff_details.objects.get(id=id)
+      purchase_data=PurchaseBillItem.objects.filter(purchasebill__company=staff.company, purchasebill__billdate__range=[from_date_str, To_date_str])
+      sale_data= SalesInvoiceItem.objects.filter(salesinvoice__company=staff.company, salesinvoice__date__range=[from_date_str, To_date_str])
+      content={
+      'bill':sale_data,
+      'bill2':purchase_data,
+      'staff':staff,
+      'sdate':from_date_str,
+      'edate':To_date_str
+      }
+      template_path = 'company/share_discount_report_mail.html'
+      template = get_template(template_path)
+
+      html  = template.render(content)
+      result = BytesIO()
+      pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+      pdf = result.getvalue()
+      filename = f'discount Report.pdf'
+      email = EmailMessage(mess,from_email=settings.EMAIL_HOST_USER,to=emails)
+      email.attach(filename, pdf, "application/pdf")
+      email.send(fail_silently=False)
+      messages.info(request,'discount report shared via mail')
+      return redirect('discount_report')
+
+      #if search input -------------------------
+    if search:
+      if SalesInvoiceItem.objects.filter(salesinvoice__date__startswith=search):
+          id=request.session.get('staff_id')
+          staff=staff_details.objects.get(id=id)
+          if SalesInvoiceItem.objects.filter(salesinvoice__staff=id,salesinvoice__date__startswith=search).exists:
+            sale_data=SalesInvoiceItem.objects.filter(salesinvoice__staff=id,salesinvoice__date__startswith=search)
+            content={
+            'bill':sale_data,
+            'bill2':purchase_data,
+            'staff':staff,
+            }
+            template_path = 'company/share_discount_report_mail.html'
+            template = get_template(template_path)
+
+            html  = template.render(content)
+            result = BytesIO()
+            pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+            pdf = result.getvalue()
+            filename = f'discount Report.pdf'
+            email = EmailMessage(mess,from_email=settings.EMAIL_HOST_USER,to=emails)
+            email.attach(filename, pdf, "application/pdf")
+            email.send(fail_silently=False)
+            messages.info(request,'discount report shared via mail')
+            return redirect('discount_report')
+      if PurchaseBillItem.objects.filter(purchasebill__billdate__startswith=search):
+          id=request.session.get('staff_id')
+          staff=staff_details.objects.get(id=id)
+          if PurchaseBillItem.objects.filter(purchasebill__staff=id,purchasebill__billdate__startswith=search).exists:
+            purchase_data=PurchaseBillItem.objects.filter(purchasebill__staff=id,purchasebill__billdate__startswith=search)
+            content={
+            'bill':sale_data,
+            'bill2':purchase_data,
+            'staff':staff,
+            }
+            template_path = 'company/share_discount_report_mail.html'
+            template = get_template(template_path)
+
+            html  = template.render(content)
+            result = BytesIO()
+            pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+            pdf = result.getvalue()
+            filename = f'discount Report.pdf'
+            email = EmailMessage(mess,from_email=settings.EMAIL_HOST_USER,to=emails)
+            email.attach(filename, pdf, "application/pdf")
+            email.send(fail_silently=False)
+            messages.info(request,'discount report shared via mail')
+            return redirect('discount_report')
+        
+    #party name---------------------
+      if party.objects.filter(party_name__startswith=search).exists():
+        id = request.session.get('staff_id')
+        staff = staff_details.objects.get(id=id)
+        party_name = party.objects.get(party_name__startswith=search)
+
+        if PurchaseBill.objects.filter(staff=id, party=party_name.id).exists() or SalesInvoice.objects.filter(staff=id, party=party_name.id).exists():
+            print('aa')
+
+            purchase_data = PurchaseBillItem.objects.filter(purchasebill__staff=id, purchasebill__party=party_name.id) if PurchaseBill.objects.filter(staff=id, party=party_name.id).exists() else None
+            sale_data = SalesInvoiceItem.objects.filter(salesinvoice__staff=id, salesinvoice__party=party_name.id) if SalesInvoice.objects.filter(staff=id, party=party_name.id).exists() else None
+
+            content = {
+                'bill': sale_data,
+                'bill2': purchase_data,
+                'staff': staff,
+            }
+
+            template_path = 'company/share_discount_report_mail.html'
+            template = get_template(template_path)
+
+            html = template.render(content)
+            result = BytesIO()
+            pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+            pdf = result.getvalue()
+            filename = f'discount Report.pdf'
+            email = EmailMessage(mess, from_email=settings.EMAIL_HOST_USER, to=emails)
+            email.attach(filename, pdf, "application/pdf")
+            email.send(fail_silently=False)
+            messages.info(request, 'discount report shared via mail')
+            return redirect('discount_report')
+
+      if PurchaseBillItem.objects.filter(discount__startswith=search) or  SalesInvoiceItem.objects.filter(discount__startswith=search):
+          id=request.session.get('staff_id')
+          staff=staff_details.objects.get(id=id)
+          if PurchaseBillItem.objects.filter(purchasebill__staff=id,discount__startswith=search).exists or SalesInvoiceItem.objects.filter(salesinvoice__staff=id,discount__startswith=search).exists:
+            purchase_data=PurchaseBillItem.objects.filter(purchasebill__staff=id,discount__startswith=search)
+            sale_data=SalesInvoiceItem.objects.filter(salesinvoice__staff=id,discount__startswith=search)
+            
+            content={
+              'bill': sale_data,
+              'bill2': purchase_data,
+              'staff': staff,
+              }
+            template_path = 'company/share_discount_report_mail.html'
+            template = get_template(template_path)
+
+            html  = template.render(content)
+            result = BytesIO()
+            pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+            pdf = result.getvalue()
+            filename = f'discount Report.pdf'
+            email = EmailMessage(mess,from_email=settings.EMAIL_HOST_USER,to=emails)
+            email.attach(filename, pdf, "application/pdf")
+            email.send(fail_silently=False)
+            messages.info(request,'discount report shared via mail')
+            return redirect('discount_report') 
+
+
+          
+    
+    if search == '' or filters_by == '' or from_date_str == '' or To_date_str == '' :
+      id=request.session.get('staff_id')
+      staff=staff_details.objects.get(id=id)
+      sale_data= SalesInvoiceItem.objects.filter(company=staff.company)
+      purchase_data = PurchaseBillItem.objects.filter(company=staff.company)
+      
+      content={
+        'bill':sale_data,
+        'bill2':purchase_data,
+        'staff':staff,
+        
+      }
+      template_path = 'company/share_discount_report_mail.html'
+      template = get_template(template_path)
+      html  = template.render(content)
+      result = BytesIO()
+      pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+      pdf = result.getvalue()
+      filename = f'Discount Report.pdf'
+      email = EmailMessage(mess,from_email=settings.EMAIL_HOST_USER,to=emails)
+      email.attach(filename, pdf, "application/pdf")
+      email.send(fail_silently=False)
+      messages.info(request,'discount report shared via mail')
+      return redirect('discount_report') 
+  return redirect('discount_report') 

@@ -62,6 +62,7 @@
             </thead>
             <tbody>
                 {% for i in bill %}
+                {% if i.discount != 0 %}
                 <tr>
                     <td>{{i.salesinvoice.date}}</td>
                     
@@ -72,9 +73,11 @@
                     
                    
                 </tr>
+                {% endif %}
                 {% endfor %}
 
                 {% for i in bill2 %}
+                {% if i.discount != '0' %}
                 <tr>
                     <td>{{i.purchasebill.billdate}}</td>
                     
@@ -85,6 +88,7 @@
                     
                    
                 </tr>
+                {% endif %}
                 {% endfor %}
                 
             </tbody>

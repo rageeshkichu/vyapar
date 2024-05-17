@@ -234,9 +234,7 @@
             
 
             <div class="row pt-0 m-0">
-                <div class="col " style="text-align: end; margin-right:30px;"> <a class="mr-12" href="{% url 'companyreport' %}" style="text-align: right; font-size:xx-large; color: black;position: relative;top: 25px;">
-                    <i class="fa fa-times mt-2" aria-hidden="true"></i>
-                </a></div>
+                
                 <div class="card p-0 m-0 bg-light" style="min-height: 60vh;width: 96%;" id="d2">
                     <div class="row m-2 p-2 pt-3">
                         <div class="col-sm-12 col-lg-3">
@@ -307,43 +305,49 @@
                         <tbody>
                             
                             {% for c in credit %}
+                            {% if c.discount != 0 %}
                             <tr>
                                 
                                 <td class="text-center">{{c.salesinvoice.date|date:'Y-m-d'}}</td>
                                
                                 <td class="text-center">{{c.salesinvoice.party_name}}</td>
-                                <td class="text-center">{{c.discount}}</td>
-                                <td class="text-center">00.00</td>
+                                <td class="text-center">{{c.discount|floatformat:2}}</td>
+                                <td class="text-center">00</td>
                                 
-                                
-                                
+                            </tr>
+                                {% endif %}
                             {% endfor %} 
                             {% for c in creditt %}
+                                {% if c.discount != '0' %}
                             <tr>
                                 
                                 <td class="text-center">{{c.purchasebill.billdate|date:'Y-m-d'}}</td>
                                
                                 <td class="text-center">{{c.purchasebill.party.party_name}}</td>
-                                <td class="text-center">00.00</td>
-                                <td class="text-center">{{c.discount}}</td>
-                                
-                                
+                                <td class="text-center">00</td>
+                                <td class="text-center">{{c.discount|floatformat:2}}</td>
+                            </tr>   
+                                {% endif %} 
                                 
                             {% endfor %} 
 
                                 
                         </tbody>
                     </table>
-
+                    <div class="row justify-content-end">
+                        <div class="col-auto">
+                            <h5 class="text-end">Total Sales Discount: <span id="totalSalesDiscount">0.00</span></h5>
+                        </div>
+                        <div class="w-100"></div>
+                        <div class="col-auto">
+                            <h5 class="text-end">Total Purchase Discount: <span id="totalPurchaseDiscount">0.00</span></h5>
+                        </div>
+                    </div>
+                    
 
                 </div>
                 
-                    <div class="col">
-                        <p style="margin-left: 800px;">Total Sales Discount: <span id="totalSalesDiscount">0.00</span></p>
-                    </div>
-                    <div class="col">
-                        <p style="margin-left: 800px;">Total Purchase Discount: <span id="totalPurchaseDiscount">0.00</span></p>
-                    </div>
+                    
                 </div>
                 
             </div>
@@ -357,6 +361,11 @@
 </div>
 
 </div>
+<style>
+ 
+
+
+</style>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <script>
     {% for msg in messages %}
@@ -367,298 +376,114 @@
   });
     {% endfor %}
    </script>
+   
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Calculate total sales discount
+ jQuery(document).ready(function ($) {
+    function updateTotalDiscounts() {
         var totalSalesDiscount = 0;
-        document.querySelectorAll("tbody tr td:nth-child(3)").forEach(function(td) {
-            totalSalesDiscount += parseFloat(td.textContent);
-        });
-        document.getElementById("totalSalesDiscount").textContent = totalSalesDiscount.toFixed(2);
-
-        // Calculate total purchase discount
         var totalPurchaseDiscount = 0;
-        document.querySelectorAll("tbody tr td:nth-child(4)").forEach(function(td) {
-            totalPurchaseDiscount += parseFloat(td.textContent);
+        // Calculate total sales discount
+        $("#myTable tbody tr:visible").each(function() {
+            totalSalesDiscount += parseFloat($(this).find("td:nth-child(3)").text()) || 0;
         });
-        document.getElementById("totalPurchaseDiscount").textContent = totalPurchaseDiscount.toFixed(2);
-    });
-    $(document).ready(function () {
-        $('.apply-filter').on('click', function () {
-            const $table = $('#myTable');
-            const columnIndex = $(this).closest('th').index();
-            var  filterValue = $(this).siblings('.filter-value').val().trim();
-            document.getElementById("filter").value =filterValue;
-            console.log("=============================+++++++++++++++");
-            console.log(filterValue)
-
-            $table.find('tbody tr').hide(); // Hide all rows
-            console.log("hide");
-            applyEqualToFilter($table, columnIndex, filterValue);
-           
-
-            // Close the filter dropdown
-            // $(this).closest('.filter-dropdown').hide();
+        // Calculate total purchase discount
+        $("#myTable tbody tr:visible").each(function() {
+            totalPurchaseDiscount += parseFloat($(this).find("td:nth-child(4)").text()) || 0;
         });
+        // Update total discount elements
+        $("#totalSalesDiscount").text(totalSalesDiscount.toFixed(2));
+        $("#totalPurchaseDiscount").text(totalPurchaseDiscount.toFixed(2));
+    }
 
-        function applyEqualToFilter($table, columnIndex, filterValue) {
-            console.log("filter");
-            $table.find(`tbody tr td:nth-child(${columnIndex + 1})`).each(function () {
-                const cellValue = $(this).text().trim();
-                if (cellValue === filterValue) {
-                    $(this).parent().show();
-                    console.log(this)
-                    
-                }
-            });
-        }
-
-        $('.clear-filter').on('click', function () {
-            $('#myTable tbody tr').show();
-            $(this).siblings('.filter-value').val('');
-
-            // Close the filter dropdown
-            // $(this).closest('.filter-dropdown').hide();
-        });
-
-        $('.apply-filter').on('click', function () {
-            const $table = $('#myTable1');
-            const columnIndex = $(this).closest('th').index();
-            const filterValue = $(this).siblings('.filter-value').val().trim();
-            console.log("=============================+++++++++++++++");
-            console.log(filterValue)
-
-            $table.find('tbody tr').hide(); // Hide all rows
-            console.log("hide");
-            applyEqualToFilter($table, columnIndex, filterValue);
-
-            // Close the filter dropdown
-            // $(this).closest('.filter-dropdown').hide();
-        });
-
-        function applyEqualToFilter($table, columnIndex, filterValue) {
-            console.log("filter");
-            $table.find(`tbody tr td:nth-child(${columnIndex + 1})`).each(function () {
-                const cellValue = $(this).text().trim();
-                if (cellValue === filterValue) {
-                    $(this).parent().show();
-                    console.log(this)
-                }
-            });
-            calculatetotal()
-        }
-
-        $('.clear-filter').on('click', function () {
-            $('#myTable tbody tr').show();
-            $(this).siblings('.filter-value').val('');
-            window.reload();
-            // Close the filter dropdown
-            // $(this).closest('.filter-dropdown').hide();
-        });
-
-    });
-</script>
-
-<script>
-// jQuery(document).ready(function ($) {
-//     $(".clickable-row").click(function () {
-//         window.location = $(this).data("href");
-//     });
-// });
-jQuery(document).ready(function ($) {
     $("#search_input1").on("keyup", function () {
         var value = $(this).val().toLowerCase();
         document.getElementById("search").value= value;
         $("#myTable tbody tr").filter(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
         });
-        $("#myTable1 tbody tr").filter(function () {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-          
-        });
-        calculatetotal()
-       
+        updateTotalDiscounts();
     });
-   
+
     $(document).on('click', '.btn_print', function (event) {
-    $('#myTable').removeClass('table-hover');
-    var printContents = $("#content-div").clone(); // Clone the content-div to avoid modifying the original content
-    printContents.find('.hideon-print').remove(); // Remove columns by class name
-
-    var $printerDiv = $('<div class="printContainer" id=printContainer></div>');
-    $printerDiv.html(printContents.html());
-    $('body').append($printerDiv).addClass("printingContent");
-    var h1Element = document.createElement("h1");
-    var head = document.getElementById("printContainer");
-    head.insertBefore(h1Element, head.firstChild);
-    window.print();
-    $printerDiv.remove();
-    $('body').removeClass("printingContent");
-
+        $('#myTable').removeClass('table-hover');
+        var printContents = $("#content-div").clone();
+        printContents.find('.hideon-print').remove();
+        var $printerDiv = $('<div class="printContainer" id="printContainer"></div>');
+        $printerDiv.html(printContents.html());
+        $('body').append($printerDiv).addClass("printingContent");
+        var h1Element = document.createElement("h1");
+        var head = document.getElementById("printContainer");
+        head.insertBefore(h1Element, head.firstChild);
+        window.print();
+        $printerDiv.remove();
+        $('body').removeClass("printingContent");
     });
-   
-});
 
-var table = document.getElementById("myTable");
-var table2=document.getElementById("myTable1");
-var fromDate;
-var toDate;
-$('#in1').on('change', function () {
-    fromDate = $(this).val();
-    $('#in2').prop('min', function () {
-        return fromDate
+    $('#in1').on('change', function () {
+        fromDate = $(this).val();
+        $('#in2').prop('min', fromDate);
+        filterByDate();
     });
-    var startDate = new Date(document.getElementById("in1").value);
-    var endDate = new Date(document.getElementById("in2").value);
-    var rows = table.getElementsByTagName("tr")
-    
 
-    console.log(startDate);
-    
-    document.getElementById("s1date").innerHTML =String(startDate.toLocaleDateString()) + ' TO ';
-    ''
-    for (var i = 1; i < rows.length; i++) {
-        var row = rows[i];
-        
-        var dateCell = row.cells[0];
-        var rowDate = new Date(dateCell.textContent);
-
-        if ((rowDate >= startDate) || (rowDate <= endDate && rowDate >= startDate)) {
-            row.style.display = "";
-            
-
-        } else {
-            row.style.display = "none";
-            
-
-        }
-    }
-    calculatetotal()
-
-
-    
-
-});
-
-$('#in2').on('change', function () {
-    toDate = $(this).val();
-    $('#in1').prop('max', function () {
-        return toDate
-    })
-    var startDate = new Date(document.getElementById("in1").value);
-    var endDate = new Date(document.getElementById("in2").value);
-    var rows = table.getElementsByTagName("tr");
-    
-    
-    document.getElementById("e1date").innerHTML = endDate.toLocaleDateString();
-    for (var i = 1; i < rows.length; i++) {
-        var row = rows[i];
-        
-        var dateCell = row.cells[0];
-        var rowDate = new Date(dateCell.textContent);
-        if (rowDate <= endDate && rowDate >= startDate) {
-            row.style.display = "";
-            
-        } else {
-            row.style.display = "none";
-            
-
-        }
-    }
-    calculatetotal()
-    
-
-})
-
-function exportAsExcel() {
-    $('in1').prop
-    const table = document.getElementById('myTable'); // Replace 'myTable' with your table's ID
-    const wb = XLSX.utils.table_to_book(table);
-
-    XLSX.writeFile(wb, 'discount_report.xlsx');
-    location.reload();
-}
-</script>
-<script>
-     $(document).ready(function () {
-      $('#in1, #in2').change(function () {
-        $('#fdate').val($('#in1').val());
-        $('#tdate').val($('#in2').val());
-       
-      });
+    $('#in2').on('change', function () {
+        toDate = $(this).val();
+        $('#in1').prop('max', toDate);
+        filterByDate();
     });
-</script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-
-<script>
-    function exportAsPDF() {
-    
-
-    // Use the correct selector to get the element by ID
-    var element = document.getElementById('content-div') 
-
-            var opt =
-            {
-                margin: 0.5,
-                filename: 'Discount report' + '.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 4 },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait', }
-            };
-            html2pdf().set(opt).from(element).save();
-            
-    
-}
-
-
-</script>
-<script>
-    calculatetotal()
-
-    function calculatetotal(){
-        var table = document.getElementById('myTable');
-        var rows = table.getElementsByTagName('tr');
-        tpaid = 0;
-        tunpaid = 0;
-        ttotal = 0; 
-        for (var i = 1; i < rows.length; i++) {
-            if(rows[i].style.display !='none'){
-
-                var ucells = rows[i].getElementsByTagName('td')[6];
-                
-                var uamount = rows[i].getElementsByTagName('td')[3];
-                
-                var uvalue = uamount.textContent || uamount.innerText;
-                console.log(uvalue);
-                var utextValue = ucells.textContent || ucells.innerText;
-                if(uvalue == 'Sale Invoice'){
-                tunpaid += parseFloat(utextValue)
-                }
-                if(uvalue == 'credit note'){
-                tunpaid -= parseFloat(utextValue)
-                }
-               
-                var tcells = rows[i].getElementsByTagName('td')[5];
-                console.log(tcells);
-                var uamount = rows[i].getElementsByTagName('td')[3];
-                var uvalue = uamount.textContent || uamount.innerText;
-                var ttextValue = tcells.textContent || tcells.innerText;
-                if(uvalue == 'Sale Invoice'){
-                    ttotal += parseFloat(ttextValue)
-                }
-                if(uvalue == 'credit note'){
-                    ttotal -= parseFloat(ttextValue)
-                }
-               
+    function filterByDate() {
+        var startDate = new Date($('#in1').val());
+        var endDate = new Date($('#in2').val());
+        $("#myTable tbody tr").each(function() {
+            var rowDate = new Date($(this).find("td:nth-child(1)").text());
+            if (rowDate >= startDate && rowDate <= endDate) {
+                $(this).show();
+            } else {
+                $(this).hide();
             }
-        }
-        document.getElementById('paidval').textContent = ttotal-tunpaid
-        document.getElementById('unpaidval').textContent = tunpaid
-        document.getElementById('totalval').textContent = ttotal
-        document.getElementById('paidval1').textContent = ttotal-tunpaid
-        document.getElementById('unpaidval1').textContent = tunpaid
-        document.getElementById('totalval1').textContent = ttotal
+        });
+        updateTotalDiscounts();
     }
-</script>
+
+    function exportAsExcel() {
+        const table = document.getElementById('myTable');
+        const wb = XLSX.utils.table_to_book(table);
+        XLSX.writeFile(wb, 'discount_report.xlsx');
+        location.reload();
+    }
+
+    function exportAsPDF() {
+        var element = document.getElementById('content-div');
+        var opt = {
+            margin: 0.5,
+            filename: 'Discount report' + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 4 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    // Export functions accessible from buttons
+    window.exportAsExcel = exportAsExcel;
+    window.exportAsPDF = exportAsPDF;
+
+    // Call the function initially
+    updateTotalDiscounts();
+});
+
+    </script>
+    <script>
+        $(document).ready(function () {
+         $('#in1, #in2').change(function () {
+           $('#fdate').val($('#in1').val());
+           $('#tdate').val($('#in2').val());
+          
+         });
+       });
+   </script>
+    
+
+
 {% endblock %}

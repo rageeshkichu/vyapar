@@ -17056,9 +17056,10 @@ def discount_report(request):
   id=request.session.get('staff_id')
   staff=staff_details.objects.get(id=id)
   company=SalesInvoice.objects.filter(company=staff.company)
+  allmodules= modules_list.objects.get(company=staff.company.id,status='New')
   credit=SalesInvoiceItem.objects.filter(company=staff.company)
   creditt = PurchaseBillItem.objects.filter(company=staff.company)
-  return render(request,'company/discount_report.html',{'staff':staff,'company':company,'credit':credit,'creditt':creditt})
+  return render(request,'company/discount_report.html',{'staff':staff,'company':company,'credit':credit,'creditt':creditt,'allmodules':allmodules})
 
  
 

@@ -421,15 +421,20 @@
     });
 
     $('#in1').on('change', function () {
+        var startDate = new Date(document.getElementById("in1").value);
+        document.getElementById("s1date").innerHTML =String(startDate.toLocaleDateString()) + ' TO ';
         fromDate = $(this).val();
         $('#in2').prop('min', fromDate);
         filterByDate();
     });
 
     $('#in2').on('change', function () {
+        var endDate = new Date($('#in2').val());
+        document.getElementById("e1date").innerHTML = endDate.toLocaleDateString();
         toDate = $(this).val();
         $('#in1').prop('max', toDate);
         filterByDate();
+
     });
 
     function filterByDate() {
